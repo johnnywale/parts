@@ -1,0 +1,101 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/port: "9104"
+    prometheus.io/scrape: "true"
+  labels:
+    app: tx-round-cass-processor
+    ksonnet.io/component: processor
+  name: tx-round-cass-processor
+spec:
+  ports:
+  - name: web
+    port: 80
+    targetPort: containerPort
+  selector:
+    app: tx-round-cass-processor
+  type: ClusterIP
+---
+apiVersion: v1
+data:
+  mariadb-root-password: ZmFm
+kind: Secret
+metadata:
+  labels:
+    app: tx-round-cass-processor
+    ksonnet.io/component: processor
+  name: tx-round-cass-processor
+  namespace: default
+type: Opaque
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: tx-round-cass-processor
+    ksonnet.io/component: processor
+  name: tx-round-cass-processor
+  namespace: default
+spec:
+  minReadySeconds: 20
+  revisionHistoryLimit: 3
+  template:
+    metadata:
+      labels:
+        app: tx-round-cass-processor
+      namespace: default
+    spec:
+      containers:
+      - env:
+        - name: APP_NAME
+          value: tx-round-cass-processor
+        - name: APP_VERSION
+          value: BAC-1375
+        - name: CONFIG_FILES
+          value: /conf/dashur-2.config.yaml,/conf/dashur.processor-transaction-round-cassandra.config.yaml
+        - name: FLUENTD_HOST
+          value: fluentd-logger.kube-system.svc.cluster.local
+        - name: MAX_HEAP_SPACE
+          value: 2048M
+        - name: MIN_HEAP_SPACE
+          value: 2048M
+        - name: JAVA_OPTS
+          value: -Djava.net.preferIPv4Stack=true
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: kube-registry.kube-system.svc.dev-cluster:5000/dashur/app-processor-account-accountapi:BAC-1375
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 2
+        name: app
+        ports:
+        - containerPort: 8080
+          name: containerPort
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 20
+          timeoutSeconds: 2
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2200Mi
+        volumeMounts:
+        - mountPath: /conf
+          name: config-volume
+          readOnly: true
+      securityContext:
+        fsGroup: 9999
+      volumes:
+      - configMap:
+          name: dashur-config
+        name: config-volume

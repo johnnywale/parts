@@ -1,0 +1,32 @@
+{
+  "name": "springboot2",
+  "apiVersion": "0.0.1",
+  "kind": "ksonnet.io/parts",
+  "description": "Springboot2 application",
+  "author": "ksonnet team <ksonnet-help@heptio.com>",
+  "contributors": [
+  {
+    "name": "johnny",
+    "email": "johnny@stargazer.com.sg"
+  }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ksonnet/mixins"
+  },
+    "keywords": [
+      "java",
+      "springboot2"
+    ],
+  "quickStart": {
+    "prototype": "com.dashur.springboot2-stateless",
+    "flags": {
+      "name": "mariadb",
+      "namespace": "default",
+      "mariaRootPassword": "boot"
+    },
+    "comment": "Run a dashur springboot2"
+  },
+  "license": "Apache 2.0"
+}
+
